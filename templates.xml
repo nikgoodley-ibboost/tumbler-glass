@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><templates><template autoinsert="true" context="java" deleted="false" description="Tumbler Scenario" enabled="true" name="Scenario">	@${scenarioType:newType(tumbler.Scenario)}(pending = true)
+	public void should${name}() {
+		Given("${cursor}");		
+
+		When("");
+
+		Then("");
+	}${:importStatic('tumbler.Tumbler.*')}
+</template></templates>
