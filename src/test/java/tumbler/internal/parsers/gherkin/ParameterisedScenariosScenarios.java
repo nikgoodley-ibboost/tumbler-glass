@@ -70,12 +70,16 @@ public class ParameterisedScenariosScenarios {
     @Scenario
     @Parameters(source = OneIntegerProvider.class)
     public void shouldWorkForParametersProviderClass(int integer) {
-        assertEquals(1, integer);
+        assertTrue(integer < 4);
     }
 
     public static class OneIntegerProvider {
-        public static String[] provideNumberOne() {
-            return new String[] { "|1|" };
+        public static String[] provideTwoNumbers() {
+            return new String[] { "|1|", "|2|" };
+        }
+
+        public static String[] provideOneNumber() {
+            return new String[] { "|3|" };
         }
     }
 }

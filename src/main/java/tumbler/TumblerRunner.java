@@ -97,6 +97,7 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
     }
 
     private String[] paramsFromProvider(Class sourceClass) {
+        ArrayList<String> result = new ArrayList<String>();
         Method[] methods = sourceClass.getDeclaredMethods();
 
         for (Method method : methods) {
@@ -106,14 +107,17 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
                             method.getName() +
                             " is not declared as static. Modify it to a static method.");
                 try {
-                    return (String[]) method.invoke(null);
+                    result.addAll(Arrays.asList((String[]) method.invoke(null)));
                 } catch (Exception e) {
                     throw new RuntimeException("Cannot invoke parameters source method: " + method.getName(), e);
                 }
             }
         }
 
-        throw new RuntimeException("No methods starting with provide in the parameters source class: " + sourceClass.getName());
+        if (result.isEmpty())
+            throw new RuntimeException("No methods starting with provide or they return no result in the parameters source class: "
+                    + sourceClass.getName());
+        return result.toArray(new String[] {});
     }
 
     private Description findChildForParams(Statement methodInvoker, Description methodDescription) {
