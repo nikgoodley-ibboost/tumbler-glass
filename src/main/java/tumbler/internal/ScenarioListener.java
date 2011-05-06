@@ -121,17 +121,18 @@ public class ScenarioListener extends RunListener {
         if (scenarioHasDefinedName(scenarioAnnotation))
             name = scenarioAnnotation.value();
         else
-            name = createScenarioNameFromTestMethodName(description, parametersAnnotation, name);
+            name = createScenarioNameFromTestMethodName(description, parametersAnnotation);
 
         if (parametersAnnotation != null)
-            name += " (" + description.getMethodName().substring(0, description.getMethodName().lastIndexOf('|') + 1) + ")";
+            name = name.substring(name.indexOf('(') + 1, name.indexOf(')')) + " ("
+                    + description.getMethodName().substring(0, description.getMethodName().lastIndexOf('|') + 1) + ")";
 
         return ScenarioManager.currentScenario()
                 .withName(name)
                 .withDescription(description);
     }
 
-    private String createScenarioNameFromTestMethodName(Description description, Parameters parametersAnnotation, String name) {
+    private String createScenarioNameFromTestMethodName(Description description, Parameters parametersAnnotation) {
         try {
             return decamelise(description.getMethodName());
         } catch (NoSuchMethodError e) { // junit 4.5
