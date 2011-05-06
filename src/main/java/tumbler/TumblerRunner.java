@@ -2,6 +2,7 @@ package tumbler;
 
 import static tumbler.internal.TumblerUtils.*;
 
+import java.lang.reflect.*;
 import java.util.*;
 
 import org.junit.internal.runners.model.*;
@@ -46,38 +47,38 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
     }
 
     @Override
-    protected void runChild(FrameworkMethod method, RunNotifier notifier) {        
+    protected void runChild(FrameworkMethod method, RunNotifier notifier) {
         Statement methodInvoker = methodBlock(method);
-        
-        if (isParametrised(method))            
+
+        if (isParametrised(method))
             runParameterisedScenario(isPending(method), method, notifier, methodInvoker);
-        else                
+        else
             runScenario(isPending(method), method, notifier, methodInvoker);
     }
 
     private boolean isPending(FrameworkMethod method) {
         return method.getAnnotation(Scenario.class).pending();
     }
-    
+
     private void runScenario(boolean pending, FrameworkMethod method, RunNotifier notifier, Statement methodInvoker) {
         Description description = describeChild(method);
         runMethodInvoker(pending, notifier, description, methodInvoker, description);
     }
-    
+
     private void runParameterisedScenario(boolean pending, FrameworkMethod method, RunNotifier notifier, Statement methodInvoker) {
-        String[] params = method.getAnnotation(Parameters.class).value();    
-        Description methodDescription = Description.createSuiteDescription(testName(method));    
+        String[] params = method.getAnnotation(Parameters.class).value();
+        Description methodDescription = Description.createSuiteDescription(testName(method));
         for (String paramSet : params)
             methodDescription.addChild(Description.createTestDescription(getTestClass().getJavaClass(),
-                    paramSet + " (" + testName(method) + ")", method.getAnnotations()));                
-        
+                    paramSet + " (" + testName(method) + ")", method.getAnnotations()));
+
         Description methodWithParams = findChildForParams(methodInvoker, methodDescription);
-        
+
         if (!pending)
             notifier.fireTestStarted(methodWithParams);
-        
+
         runMethodInvoker(pending, notifier, methodDescription, methodInvoker, methodWithParams);
-        
+
         if (pending)
             notifier.fireTestIgnored(methodWithParams);
         else
@@ -85,13 +86,37 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
     }
 
     private Description findChildForParams(Statement methodInvoker, Description methodDescription) {
-        for (Description child : methodDescription.getChildren())
-            if(child.getMethodName().startsWith(((InvokeParameterisedMethod) methodInvoker).getParamsAsString()))
+        for (Description child : methodDescription.getChildren()) {
+            InvokeParameterisedMethod parameterisedInvoker = findParameterisedMethodInvokerInChain(methodInvoker);
+
+            if (child.getMethodName().startsWith(parameterisedInvoker.getParamsAsString()))
                 return child;
+        }
         return null;
     }
-    
-    private void runMethodInvoker(boolean pending, RunNotifier notifier, Description description, Statement methodInvoker, Description methodWithParams) {
+
+    private InvokeParameterisedMethod findParameterisedMethodInvokerInChain(Statement methodInvoker) {
+        while (methodInvoker != null && !(methodInvoker instanceof InvokeParameterisedMethod))
+            methodInvoker = nextChainedInvoker(methodInvoker);
+
+        if (methodInvoker == null)
+            throw new RuntimeException("Cannot find invoker for the parameterised method. Using wrong JUnit version?");
+
+        return (InvokeParameterisedMethod) methodInvoker;
+    }
+
+    private Statement nextChainedInvoker(Statement methodInvoker) {
+        try {
+            Field methodInvokerField = methodInvoker.getClass().getDeclaredField("fNext");
+            methodInvokerField.setAccessible(true);
+            return (Statement) methodInvokerField.get(methodInvoker);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void runMethodInvoker(boolean pending, RunNotifier notifier, Description description, Statement methodInvoker,
+            Description methodWithParams) {
         EachTestNotifier eachNotifier = new EachTestNotifier(notifier, description);
         try {
             if (pending)
@@ -179,8 +204,9 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
     private void addScenarioForEachParamSet(List<FrameworkMethod> resultMethods, FrameworkMethod scenarioMethod) {
         String[] paramSets = scenarioMethod.getMethod().getAnnotation(Parameters.class).value();
 
-        for (String paramSet : paramSets)
+        for (int i = 0; i < paramSets.length; i++)
             addScenarioOnce(resultMethods, scenarioMethod);
+
         paramSetIndexMap.put(scenarioMethod, 0);
     }
 
