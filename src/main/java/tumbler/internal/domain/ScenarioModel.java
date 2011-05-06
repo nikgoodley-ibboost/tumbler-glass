@@ -25,33 +25,40 @@ public class ScenarioModel {
     }
 
     public String given() {
-        return processStory(givenStep());
+        if (givenStep() == null)
+            return "";
+        return processStory(givenStep().text());
     }
 
-    private String givenStep() {
+    public GivenModel givenStep() {
         return stepOfType(GivenModel.class);
     }
 
     public String when() {
-        return processStory(whenStep());
+        if (whenStep() == null)
+            return "";
+        return processStory(whenStep().text());
     }
-    
-    private String whenStep() {
+
+    private StepBasedModel whenStep() {
         return stepOfType(WhenModel.class);
     }
 
     public String then() {
-        return processStory(thenStep());
+        if (thenStep() == null)
+            return "";
+        return processStory(thenStep().text());
     }
-    
-    private String thenStep() {
+
+    private StepBasedModel thenStep() {
         return stepOfType(ThenModel.class);
     }
-    
-    private String stepOfType(Class stepClass) {
+
+    @SuppressWarnings("unchecked")
+    private <T extends StepBasedModel> T stepOfType(Class<T> stepClass) {
         for (StepBasedModel step : steps)
             if (step.getClass().equals(stepClass))
-                return step.text();
+                return (T) step;
         return null;
     }
 
@@ -95,7 +102,7 @@ public class ScenarioModel {
     }
 
     @Override
-    public boolean equals(Object obj) {        
+    public boolean equals(Object obj) {
         ScenarioModel other = (ScenarioModel) obj;
         if (other == null)
             return false;
@@ -120,10 +127,10 @@ public class ScenarioModel {
         return description;
     }
 
-    public List<StepBasedModel> steps() {        
+    public List<StepBasedModel> steps() {
         return steps;
     }
-    
+
     public StoryModel story() {
         return story;
     }
@@ -132,5 +139,4 @@ public class ScenarioModel {
         this.story = story;
         return this;
     }
-
 }

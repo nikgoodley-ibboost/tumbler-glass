@@ -16,9 +16,25 @@ public class TableModel {
         for (String rowLine : tableRows)
             rows.add(TableRow.from(rowLine));
         return this;
-    }   
+    }
 
-    public TableRow header() {        
+    @Override
+    public String toString() {
+        StringBuilder text = new StringBuilder();
+        text.append("\" +\n\t\t\t\"");
+        text.append(header.toString());
+        text.append("\"");
+        text.append(" +\n\t\t\t");
+        for (int i = 0; i < header.columns().length; i++) {
+            text.append("\"|\" + ");
+            text.append(header.column(i).trim().replaceAll("\\s", "_"));
+            text.append(" + ");
+        }
+        text.append("\"|");
+        return text.toString();
+    }
+
+    public TableRow header() {
         return header;
     }
 

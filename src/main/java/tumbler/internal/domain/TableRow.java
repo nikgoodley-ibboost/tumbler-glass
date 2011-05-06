@@ -11,13 +11,13 @@ public class TableRow {
         header.parse(headerLine);
         return header;
     }
-    
+
     private void parse(String headerLine) {
         headerLine = headerLine.substring(1);
         headerLine = headerLine.substring(0, headerLine.lastIndexOf('|'));
         StringTokenizer tokenizer = new StringTokenizer(headerLine, "|");
         while (tokenizer.hasMoreTokens())
-            columns.add(tokenizer.nextToken());        
+            columns.add(tokenizer.nextToken());
     }
 
     public String column(int i) {
@@ -25,6 +25,15 @@ public class TableRow {
     }
 
     public String[] columns() {
-        return columns.toArray(new String[]{});
+        return columns.toArray(new String[] {});
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder text = new StringBuilder();
+        for (String column : columns)
+            text.append("|" + column.trim().replaceAll("\\s", "_"));
+        text.append("|");
+        return text.toString();
     }
 }
