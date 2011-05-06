@@ -23,26 +23,31 @@ public class InvokeParameterisedMethod extends Statement {
     }
 
     private Object[] castParamsFromString(String params) {
-        Object[] columns = TableRow.from(params).columns();
-        Class<?>[] parameterTypes = testMethod.getMethod().getParameterTypes();
-        
-        verifySameSizeOfArrays(columns, parameterTypes);
-        columns = castColumns(columns, parameterTypes);
-        
+        Object[] columns = null;
+        try {
+            columns = TableRow.from(params).columns();
+            Class<?>[] parameterTypes = testMethod.getMethod().getParameterTypes();
+
+            verifySameSizeOfArrays(columns, parameterTypes);
+            columns = castColumns(columns, parameterTypes);
+        } catch (RuntimeException e) {
+            new IllegalArgumentException("Cannot parse parameters. Did you use | as column separator? " + params, e).printStackTrace();
+        }
+
         return columns;
     }
 
     private Object[] castColumns(Object[] columns, Class<?>[] parameterTypes) {
         Object[] result = new Object[columns.length];
-        
+
         for (int i = 0; i < columns.length; i++)
             result[i] = castColumn(columns[i], parameterTypes[i]);
-        
+
         return result;
     }
 
     private Object castColumn(Object object, Class<?> clazz) {
-        if (clazz.isInstance(object))            
+        if (clazz.isInstance(object))
             return object;
         if (clazz.isAssignableFrom(String.class))
             return object.toString();
@@ -67,7 +72,10 @@ public class InvokeParameterisedMethod extends Statement {
 
     private void verifySameSizeOfArrays(Object[] columns, Class<?>[] parameterTypes) {
         if (parameterTypes.length != columns.length)
-            throw new IllegalArgumentException("Number of parameters inside @Params annotation doesn't match the number of scenario method parameters.\nThere are " + columns.length + " parameters in annotation, while there's " + parameterTypes.length + " parameters in the " + testMethod.getName() + " method.");
+            throw new IllegalArgumentException(
+                    "Number of parameters inside @Params annotation doesn't match the number of scenario method parameters.\nThere are "
+                            + columns.length + " parameters in annotation, while there's " + parameterTypes.length + " parameters in the "
+                            + testMethod.getName() + " method.");
     }
 
     @Override

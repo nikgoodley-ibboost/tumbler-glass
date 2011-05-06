@@ -66,4 +66,16 @@ public class ParameterisedScenariosScenarios {
     public void shouldWorkForPending(int integer) {
         assertEquals(1, integer);
     }
+
+    @Scenario
+    @Parameters(source = OneIntegerProvider.class)
+    public void shouldWorkForParametersProviderClass(int integer) {
+        assertEquals(1, integer);
+    }
+
+    public static class OneIntegerProvider {
+        public static String[] provideNumberOne() {
+            return new String[] { "|1|" };
+        }
+    }
 }

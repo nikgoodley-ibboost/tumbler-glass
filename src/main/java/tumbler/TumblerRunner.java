@@ -5,6 +5,8 @@ import static tumbler.internal.TumblerUtils.*;
 import java.lang.reflect.*;
 import java.util.*;
 
+import javax.lang.model.type.*;
+
 import org.junit.internal.runners.model.*;
 import org.junit.runner.*;
 import org.junit.runner.notification.*;
@@ -66,7 +68,8 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
     }
 
     private void runParameterisedScenario(boolean pending, FrameworkMethod method, RunNotifier notifier, Statement methodInvoker) {
-        String[] params = method.getAnnotation(Parameters.class).value();
+        String[] params = paramsFromAnnotation(method);
+
         Description methodDescription = Description.createSuiteDescription(testName(method));
         for (String paramSet : params)
             methodDescription.addChild(Description.createTestDescription(getTestClass().getJavaClass(),
@@ -83,6 +86,34 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
             notifier.fireTestIgnored(methodWithParams);
         else
             notifier.fireTestFinished(methodWithParams);
+    }
+
+    private String[] paramsFromAnnotation(FrameworkMethod method) {
+        Parameters parametersAnnotation = method.getAnnotation(Parameters.class);
+        String[] params = parametersAnnotation.value();
+        if (params.length == 0 && !(parametersAnnotation.source().isAssignableFrom(NullType.class)))
+            params = paramsFromProvider(parametersAnnotation.source());
+        return params;
+    }
+
+    private String[] paramsFromProvider(Class sourceClass) {
+        Method[] methods = sourceClass.getDeclaredMethods();
+
+        for (Method method : methods) {
+            if (method.getName().startsWith("provide")) {
+                if (!Modifier.isStatic(method.getModifiers()))
+                    throw new RuntimeException("Parameters source method " +
+                            method.getName() +
+                            " is not declared as static. Modify it to a static method.");
+                try {
+                    return (String[]) method.invoke(null);
+                } catch (Exception e) {
+                    throw new RuntimeException("Cannot invoke parameters source method: " + method.getName(), e);
+                }
+            }
+        }
+
+        throw new RuntimeException("No methods starting with provide in the parameters source class: " + sourceClass.getName());
     }
 
     private Description findChildForParams(Statement methodInvoker, Description methodDescription) {
@@ -123,6 +154,7 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
                 scenarioListener.testStarted(description);
             else
                 eachNotifier.fireTestStarted();
+
             methodInvoker.evaluate();
         } catch (Throwable e) {
             if (!pending)
@@ -146,7 +178,7 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
             if (isParametrised(child)) {
                 Description parametrised = Description.createSuiteDescription(testName(child));
 
-                String[] params = child.getAnnotation(Parameters.class).value();
+                String[] params = paramsFromAnnotation(child);
 
                 for (String paramSet : params)
                     parametrised.addChild(Description.createTestDescription(getTestClass().getJavaClass(),
@@ -202,7 +234,7 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
     }
 
     private void addScenarioForEachParamSet(List<FrameworkMethod> resultMethods, FrameworkMethod scenarioMethod) {
-        String[] paramSets = scenarioMethod.getMethod().getAnnotation(Parameters.class).value();
+        String[] paramSets = paramsFromAnnotation(scenarioMethod);
 
         for (int i = 0; i < paramSets.length; i++)
             addScenarioOnce(resultMethods, scenarioMethod);
@@ -266,7 +298,7 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
         if (isParametrised(method)) {
             Integer counter = paramSetIndexMap.get(method);
             paramSetIndexMap.put(method, counter + 1);
-            return new InvokeParameterisedMethod(method, test, method.getAnnotation(Parameters.class).value()[counter]);
+            return new InvokeParameterisedMethod(method, test, paramsFromAnnotation(method)[counter]);
         } else {
             return super.methodInvoker(method, test);
         }
