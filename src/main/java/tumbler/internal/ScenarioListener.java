@@ -91,7 +91,7 @@ public class ScenarioListener extends RunListener {
 
     @Override
     public void testStarted(Description description) throws Exception {
-        if (isItSingleScenario(description)) {            
+        if (isItSingleScenario(description)) {
             ScenarioManager.startScenario();
             ScenarioManager.currentScenario().withStory(story);
         }
@@ -116,31 +116,31 @@ public class ScenarioListener extends RunListener {
     private ScenarioModel namedScenario(Description description) {
         Scenario scenarioAnnotation = description.getAnnotation(Scenario.class);
         Parameters parametersAnnotation = description.getAnnotation(Parameters.class);
-
         String name = null;
-        if (scenarioAnnotation != null && scenarioAnnotation.value() != null && !scenarioAnnotation.value().equals(""))
-            name = scenarioAnnotation.value();
-        else {
-            if (parametersAnnotation != null) {
-                
-            } else {
-                try {
-                    name = decamelise(description.getMethodName());
-                } catch (NoSuchMethodError e) { // junit 4.5
-                    name = decamelise(description.getDisplayName());
-                }
-            }
-        }
 
-        if (parametersAnnotation != null) {
-            return ScenarioManager.currentScenario()
-                    .withName(name + " (" + description.getMethodName().substring(0, description.getMethodName().lastIndexOf('|') + 1) + ")")
-                    .withDescription(description);
-        } else {
-            return ScenarioManager.currentScenario()
-                    .withName(name)
-                    .withDescription(description);
+        if (scenarioHasDefinedName(scenarioAnnotation))
+            name = scenarioAnnotation.value();
+        else
+            name = createScenarioNameFromTestMethodName(description, parametersAnnotation, name);
+
+        if (parametersAnnotation != null)
+            name += " (" + description.getMethodName().substring(0, description.getMethodName().lastIndexOf('|') + 1) + ")";
+
+        return ScenarioManager.currentScenario()
+                .withName(name)
+                .withDescription(description);
+    }
+
+    private String createScenarioNameFromTestMethodName(Description description, Parameters parametersAnnotation, String name) {
+        try {
+            return decamelise(description.getMethodName());
+        } catch (NoSuchMethodError e) { // junit 4.5
+            return decamelise(description.getDisplayName());
         }
+    }
+
+    private boolean scenarioHasDefinedName(Scenario scenarioAnnotation) {
+        return scenarioAnnotation != null && scenarioAnnotation.value() != null && !scenarioAnnotation.value().equals("");
     };
 
     void createStoryFromAnnotation(Story behaviours) {
