@@ -2,14 +2,15 @@ package tumbler.internal.domain;
 
 import java.util.*;
 
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class StepBasedModel implements WithText {
 
     protected List steps = new LinkedList();
     private String token;
-    
+
     public StepBasedModel() {
     }
-    
+
     public StepBasedModel(String text) {
         steps.add(text);
     }
@@ -22,7 +23,7 @@ public class StepBasedModel implements WithText {
         return text.toString().trim();
     }
 
-    public List steps() {        
+    public List steps() {
         return steps;
     }
 
@@ -31,7 +32,7 @@ public class StepBasedModel implements WithText {
         steps.add(text);
         return this;
     }
-    
+
     @Override
     public String toString() {
         return text();

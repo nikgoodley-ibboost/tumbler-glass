@@ -3,8 +3,9 @@ package tumbler.internal.parsers.gherkin;
 import static tumbler.internal.parsers.gherkin.Keyword.*;
 import tumbler.internal.domain.*;
 
+@SuppressWarnings("unchecked")
 public class ThenState extends ParsingState {
-    
+
     public ThenState() {
         stateTransitionMap.put(new PrefixedParser().withToken(keyword("And")).withPrefix(keyword("and")), new ParsingState());
         stateTransitionMap.put(new PrefixedParser().withToken(keyword("But")).withPrefix(keyword("but")), new ParsingState());

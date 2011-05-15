@@ -6,14 +6,17 @@ import java.util.*;
 
 import tumbler.internal.domain.*;
 
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class StoryState extends ParsingState {
 
     public StoryState() {
         stateTransitionMap.put(new ScenarioParser(), new ScenarioState());
-        stateTransitionMap.put(new PlainLineParser().withToken(keyword("In_order")).producingModel(StepBasedModel.class), new ParsingState());
+        stateTransitionMap.put(new PlainLineParser().withToken(keyword("In_order")).producingModel(StepBasedModel.class),
+                new ParsingState());
         stateTransitionMap.put(new PlainLineParser().withToken(keyword("As")).producingModel(StepBasedModel.class), new ParsingState());
         stateTransitionMap.put(new PlainLineParser().withToken(keyword("I_want")).producingModel(StepBasedModel.class), new ParsingState());
-        stateTransitionMap.put(new PlainLineParser().withToken(keyword("So_that")).producingModel(StepBasedModel.class), new ParsingState());
+        stateTransitionMap
+                .put(new PlainLineParser().withToken(keyword("So_that")).producingModel(StepBasedModel.class), new ParsingState());
     }
 
     @Override

@@ -8,5 +8,5 @@ import javax.lang.model.type.*;
 public @interface Parameters {
     String[] value() default {};
 
-    Class source() default NullType.class;
+    Class<?> source() default NullType.class;
 }

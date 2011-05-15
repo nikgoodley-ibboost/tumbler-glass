@@ -3,6 +3,7 @@ package tumbler.internal.parsers.gherkin;
 import static tumbler.internal.parsers.gherkin.Keyword.*;
 import tumbler.internal.domain.*;
 
+@SuppressWarnings("unchecked")
 public class GivenState extends ParsingState {
 
     public GivenState() {

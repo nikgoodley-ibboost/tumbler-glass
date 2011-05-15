@@ -96,7 +96,7 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
         return params;
     }
 
-    private String[] paramsFromProvider(Class sourceClass) {
+    private String[] paramsFromProvider(Class<?> sourceClass) {
         ArrayList<String> result = new ArrayList<String>();
         Method[] methods = sourceClass.getDeclaredMethods();
 
