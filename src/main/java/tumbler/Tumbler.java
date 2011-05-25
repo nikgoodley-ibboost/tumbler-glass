@@ -51,7 +51,7 @@ import tumbler.internal.domain.*;
  *    In order to borrow a book
  *    I want librarian to give me that book
  *    So that I can take it home
- *
+ * 
  *    Scenario: lend an existing book from the library
  *        Given 'Children from Bullerbyn' book in the library
  *           And a pretty librarian.
@@ -60,12 +60,12 @@ import tumbler.internal.domain.*;
  *        Then the library doesn't contain it anymore
  *           And the librarian wants to go out with you
  *           But you're already married, so no way.
- *
+ * 
  *    Scenario: not lend a nonexisting book from the library
  *        Given empty library
  *        When we try to borrow 'Children from Bullerbyn' from the library
  *        Then the library doesn't let it to be borrowed.
- *
+ * 
  *    Scenario: accept back a book previously borrowed
  *        Given 'Children from Bullerbyn' has been borrowed from the library
  *        When this book is given back
@@ -83,7 +83,7 @@ import tumbler.internal.domain.*;
  * <code>Scenarios</code> as pending - meaning that they have not been
  * implemented yet, so should be ignored during execution.<br/>
  * All scenarios have names that start with the <b>should</b> word, and contain
- * <code>given</code>, <code>when</code> and <code>then</code> sections which
+ * <code>Given</code>, <code>When</code> and <code>Then</code> sections which
  * define: initial state for the scenario, action to be performed and expected
  * output accordingly. The only thing that's lacking is... the scenario
  * implementation.
@@ -141,15 +141,17 @@ import tumbler.internal.domain.*;
  * method/class names. Still, the original name will be kept in
  * <code>@Story</code> and <code>@Scenario</code> annotations.
  * 
- * Scenario can also be written in basically any language. Supported languages are: English, German, Polish and Danish. Just add <code>-Dlocale=de</code> to be able to process a story in German.
+ * Scenario can also be written in basically any language. Supported languages
+ * are: English, German, Polish and Danish. Just add <code>-Dlocale=de</code> to
+ * be able to process a story in German.
  * </p>
  * <h3 id="4">4. Generating reports from Java</h3>
  * <p>
  * But, say, now you filled in all the scenarios, implemented the functionality
  * that realises the scenarios and you'd like to show to your business what's
  * already there. It's as easy as running all the tests with
- * <code>-DgenerateReport=scenario</code>. Now you have .scenarios files for all
- * your scenarios. It is exactly the same file format as you might have used
+ * <code>-DgenerateReport=scenarios</code>. Now you have .scenarios files for
+ * all your scenarios. It is exactly the same file format as you might have used
  * while defining the scenarios together with business people, with additional
  * information about scenarios' statuses ([PENDING,PASSED,FAILED]). Our scenario
  * would then look like this:
@@ -219,8 +221,10 @@ import tumbler.internal.domain.*;
  * scenarios defined in the current story</li>
  * <li><code>resources</code> which is a String containing path to resources
  * folder in your template</li>
- * <li><code>narrative</code> which is a String containing the 'As a ... I want... So that' phrase</li>
- * <li><code>keywords</code> which contains translations according to current locale - use it like this: keywords.keyword("Given")</li>
+ * <li><code>narrative</code> which is a String containing the 'As a ... I
+ * want... So that' phrase</li>
+ * <li><code>keywords</code> which contains translations according to current
+ * locale - use it like this: keywords.keyword("Given")</li>
  * </ul>
  * </p>
  * In <code>toc-template.html</code>:
@@ -250,6 +254,27 @@ import tumbler.internal.domain.*;
  *     Then ${scenario.then()}
  * &lt;/#list&gt;
  * </pre>
+ * 
+ * <h3 id="4a">4a. Generating reports from a Maven build</h3> You can also
+ * generate reports automatically in your maven build with this surefire plugin
+ * configuration to your pom.xml: <code>
+ *  &lt;plugin&gt;
+ *     &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+ *     &lt;artifactId&gt;maven-surefire-plugin&lt;/artifactId&gt;
+ *     &lt;configuration&gt;
+ *         &lt;useFile&gt;false&lt;/useFile&gt;
+ *         &lt;systemProperties&gt;
+ *             &lt;property&gt;
+ *                 &lt;name&gt;generateReport&lt;/name&gt;
+ *                 &lt;value&gt;html&lt;/value&gt;
+ *             &lt;/property&gt;
+ *         &lt;/systemProperties&gt;
+ *         &lt;includes&gt;
+ *             &lt;include&gt;**\/*Scenarios.java&lt;/include&gt;
+ *         &lt;/includes&gt;
+ *     &lt;/configuration&gt;
+ * &lt;/plugin&gt;
+ * </code>
  * 
  * <h3 id="5">5. Integration with JUnit</h3>
  * <p>
@@ -344,44 +369,44 @@ import tumbler.internal.domain.*;
  * @author Pawel Lipinski (pawel.lipinski@pragmatists.pl)
  */
 public class Tumbler {
-	/**
-	 * 'Given' section of a scenario
-	 * 
-	 * @param description
-	 *            description of what is given
-	 */
-	public static void Given(String description) {
-		ScenarioManager.currentScenario().withGiven(description);
-	}
+    /**
+     * 'Given' section of a scenario
+     * 
+     * @param description
+     *            description of what is given
+     */
+    public static void Given(String description) {
+        ScenarioManager.currentScenario().withGiven(description);
+    }
 
-	/**
-	 * 'When' section of a scenario
-	 * 
-	 * @param description
-	 *            description of action being performed
-	 */
-	public static void When(String description) {
-		ScenarioManager.currentScenario().withWhen(description);
-	}
+    /**
+     * 'When' section of a scenario
+     * 
+     * @param description
+     *            description of action being performed
+     */
+    public static void When(String description) {
+        ScenarioManager.currentScenario().withWhen(description);
+    }
 
-	/**
-	 * 'Then' section of a scenario
-	 * 
-	 * @param description
-	 *            description of expected effect / state
-	 */
-	public static void Then(String description) {
-		ScenarioManager.currentScenario().withThen(description);
-	}
-	
-	/**
-	 * 'Narrative' of a story
-	 * 
-	 * @param narrative
-	 *            the 'As a... I want... So that...' phrase
-	 */
-	public static void Narrative(String narrative) {
-	    if (ScenarioManager.currentScenario().story() != null)
-	        ScenarioManager.currentScenario().story().withNarrative(narrative);
-	}
+    /**
+     * 'Then' section of a scenario
+     * 
+     * @param description
+     *            description of expected effect / state
+     */
+    public static void Then(String description) {
+        ScenarioManager.currentScenario().withThen(description);
+    }
+
+    /**
+     * 'Narrative' of a story
+     * 
+     * @param narrative
+     *            the 'As a... I want... So that...' phrase
+     */
+    public static void Narrative(String narrative) {
+        if (ScenarioManager.currentScenario().story() != null)
+            ScenarioManager.currentScenario().story().withNarrative(narrative);
+    }
 }

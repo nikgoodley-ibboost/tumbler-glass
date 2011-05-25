@@ -2,11 +2,11 @@ package tumbler;
 
 import static tumbler.internal.TumblerUtils.*;
 
-import java.lang.reflect.*;
 import java.util.*;
 
-import javax.lang.model.type.*;
+import junitparams.*;
 
+import org.junit.*;
 import org.junit.internal.runners.model.*;
 import org.junit.runner.*;
 import org.junit.runner.notification.*;
@@ -32,10 +32,14 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
     private ScenarioListener scenarioListener;
     private Result result;
     private RunListener runListener;
-    private HashMap<FrameworkMethod, Integer> paramSetIndexMap;
+    private ParameterisedTestClassRunner parameterisedRunner = new ParameterisedTestClassRunner();
 
     public TumblerRunner(Class<?> klass) throws InitializationError {
         super(klass);
+        computeTestMethods();
+    }
+
+    protected void collectInitializationErrors(List<Throwable> errors) {
     }
 
     @Override
@@ -50,12 +54,17 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
 
     @Override
     protected void runChild(FrameworkMethod method, RunNotifier notifier) {
-        Statement methodInvoker = methodBlock(method);
-
-        if (isParametrised(method))
-            runParameterisedScenario(isPending(method), method, notifier, methodInvoker);
-        else
-            runScenario(isPending(method), method, notifier, methodInvoker);
+        if (parameterisedRunner.isParameterised(method)) {
+            if (method.getAnnotation(Ignore.class) != null) {
+                Description ignoredMethod = parameterisedRunner.describeParameterisedMethod(method);
+                for (Description child : ignoredMethod.getChildren()) {
+                    notifier.fireTestIgnored(child);
+                }
+                return;
+            }
+            parameterisedRunner.runParameterisedTest(method, methodBlock(method), notifier);
+        } else
+            runScenario(isPending(method), method, notifier, methodBlock(method));
     }
 
     private boolean isPending(FrameworkMethod method) {
@@ -65,89 +74,6 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
     private void runScenario(boolean pending, FrameworkMethod method, RunNotifier notifier, Statement methodInvoker) {
         Description description = describeChild(method);
         runMethodInvoker(pending, notifier, description, methodInvoker, description);
-    }
-
-    private void runParameterisedScenario(boolean pending, FrameworkMethod method, RunNotifier notifier, Statement methodInvoker) {
-        String[] params = paramsFromAnnotation(method);
-
-        Description methodDescription = Description.createSuiteDescription(testName(method));
-        for (String paramSet : params)
-            methodDescription.addChild(Description.createTestDescription(getTestClass().getJavaClass(),
-                    paramSet + " (" + testName(method) + ")", method.getAnnotations()));
-
-        Description methodWithParams = findChildForParams(methodInvoker, methodDescription);
-
-        if (!pending)
-            notifier.fireTestStarted(methodWithParams);
-
-        runMethodInvoker(pending, notifier, methodDescription, methodInvoker, methodWithParams);
-
-        if (pending)
-            notifier.fireTestIgnored(methodWithParams);
-        else
-            notifier.fireTestFinished(methodWithParams);
-    }
-
-    private String[] paramsFromAnnotation(FrameworkMethod method) {
-        Parameters parametersAnnotation = method.getAnnotation(Parameters.class);
-        String[] params = parametersAnnotation.value();
-        if (params.length == 0 && !(parametersAnnotation.source().isAssignableFrom(NullType.class)))
-            params = paramsFromProvider(parametersAnnotation.source());
-        return params;
-    }
-
-    private String[] paramsFromProvider(Class<?> sourceClass) {
-        ArrayList<String> result = new ArrayList<String>();
-        Method[] methods = sourceClass.getDeclaredMethods();
-
-        for (Method method : methods) {
-            if (method.getName().startsWith("provide")) {
-                if (!Modifier.isStatic(method.getModifiers()))
-                    throw new RuntimeException("Parameters source method " +
-                            method.getName() +
-                            " is not declared as static. Modify it to a static method.");
-                try {
-                    result.addAll(Arrays.asList((String[]) method.invoke(null)));
-                } catch (Exception e) {
-                    throw new RuntimeException("Cannot invoke parameters source method: " + method.getName(), e);
-                }
-            }
-        }
-
-        if (result.isEmpty())
-            throw new RuntimeException("No methods starting with provide or they return no result in the parameters source class: "
-                    + sourceClass.getName());
-        return result.toArray(new String[] {});
-    }
-
-    private Description findChildForParams(Statement methodInvoker, Description methodDescription) {
-        for (Description child : methodDescription.getChildren()) {
-            InvokeParameterisedMethod parameterisedInvoker = findParameterisedMethodInvokerInChain(methodInvoker);
-
-            if (child.getMethodName().startsWith(parameterisedInvoker.getParamsAsString()))
-                return child;
-        }
-        return null;
-    }
-
-    private InvokeParameterisedMethod findParameterisedMethodInvokerInChain(Statement methodInvoker) {
-        while (methodInvoker != null && !(methodInvoker instanceof InvokeParameterisedMethod))
-            methodInvoker = nextChainedInvoker(methodInvoker);
-
-        if (methodInvoker == null)
-            throw new RuntimeException("Cannot find invoker for the parameterised method. Using wrong JUnit version?");
-
-        return (InvokeParameterisedMethod) methodInvoker;
-    }
-
-    private Statement nextChainedInvoker(Statement methodInvoker) {
-        try {
-            Field methodInvokerField = methodInvoker.getClass().getDeclaredField("fNext");
-            methodInvokerField.setAccessible(true);
-            return (Statement) methodInvokerField.get(methodInvoker);
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     private void runMethodInvoker(boolean pending, RunNotifier notifier, Description description, Statement methodInvoker,
@@ -172,28 +98,26 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
 
     @Override
     public Description getDescription() {
-        Description description = Description.createSuiteDescription(getName(),
-                getTestClass().getAnnotations());
+        Description description = Description.createSuiteDescription(getName(), getTestClass().getAnnotations());
 
         List<FrameworkMethod> resultMethods = new ArrayList<FrameworkMethod>();
-        addScenarioMethods(getTestClass().getAnnotatedMethods(Scenario.class), resultMethods, true);
+        resultMethods.addAll(parameterisedRunner.computeTestMethods(getTestClass().getAnnotatedMethods(Scenario.class), true));
 
         for (FrameworkMethod child : resultMethods) {
-            if (isParametrised(child)) {
-                Description parametrised = Description.createSuiteDescription(testName(child));
-
-                String[] params = paramsFromAnnotation(child);
-
-                for (String paramSet : params)
-                    parametrised.addChild(Description.createTestDescription(getTestClass().getJavaClass(),
-                            paramSet + " (" + testName(child) + ")", child.getAnnotations()));
-
-                description.addChild(parametrised);
-            } else {
-                description.addChild(describeChild(child));
-            }
+            Description describeMethod = describeMethod(child);
+            description.addChild(describeMethod);
         }
+
         return description;
+    }
+
+    private Description describeMethod(FrameworkMethod method) {
+        Description child = parameterisedRunner.describeParameterisedMethod(method);
+
+        if (child == null)
+            child = describeChild(method);
+
+        return child;
     }
 
     private void removeScenariosListener(RunNotifier notifier) {
@@ -218,36 +142,13 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
         ensureNothingAnnotatedWithTest(super.computeTestMethods());
         List<FrameworkMethod> resultMethods = new ArrayList<FrameworkMethod>();
 
-        addScenarioMethods(getTestClass().getAnnotatedMethods(Scenario.class), resultMethods, false);
+        resultMethods.addAll(parameterisedRunner.computeTestMethods(getTestClass().getAnnotatedMethods(Scenario.class), false));
+
+        for (FrameworkMethod child : resultMethods) {
+            Description describeMethod = describeMethod(child);
+        }
 
         return resultMethods;
-    }
-
-    private void addScenarioMethods(List<FrameworkMethod> scenarios, List<FrameworkMethod> resultMethods, boolean flat) {
-        paramSetIndexMap = new HashMap<FrameworkMethod, Integer>();
-        for (FrameworkMethod scenarioMethod : scenarios) {
-            if (isParametrised(scenarioMethod) && !flat)
-                addScenarioForEachParamSet(resultMethods, scenarioMethod);
-            else
-                addScenarioOnce(resultMethods, scenarioMethod);
-        }
-    }
-
-    private boolean isParametrised(FrameworkMethod method) {
-        return method.getMethod().isAnnotationPresent(Parameters.class);
-    }
-
-    private void addScenarioForEachParamSet(List<FrameworkMethod> resultMethods, FrameworkMethod scenarioMethod) {
-        String[] paramSets = paramsFromAnnotation(scenarioMethod);
-
-        for (int i = 0; i < paramSets.length; i++)
-            addScenarioOnce(resultMethods, scenarioMethod);
-
-        paramSetIndexMap.put(scenarioMethod, 0);
-    }
-
-    private void addScenarioOnce(List<FrameworkMethod> resultMethods, FrameworkMethod scenarioMethod) {
-        resultMethods.add(scenarioMethod);
     }
 
     private void ensureNothingAnnotatedWithTest(List<FrameworkMethod> testMethods) {
@@ -299,12 +200,14 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
 
     @Override
     protected Statement methodInvoker(FrameworkMethod method, Object test) {
-        if (isParametrised(method)) {
-            Integer counter = paramSetIndexMap.get(method);
-            paramSetIndexMap.put(method, counter + 1);
-            return new InvokeParameterisedMethod(method, test, paramsFromAnnotation(method)[counter]);
-        } else {
-            return super.methodInvoker(method, test);
-        }
+        Statement methodInvoker = parameterisedRunner.parameterisedMethodInvoker(method, test);
+        if (methodInvoker == null)
+            methodInvoker = super.methodInvoker(method, test);
+
+        return methodInvoker;
+    }
+
+    public static Object[] $(Object... params) {
+        return params;
     }
 }

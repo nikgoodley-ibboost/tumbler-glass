@@ -4,6 +4,8 @@ import static tumbler.internal.TumblerUtils.*;
 
 import java.util.*;
 
+import junitparams.*;
+
 import org.junit.runner.*;
 import org.junit.runner.notification.*;
 
@@ -125,7 +127,7 @@ public class ScenarioListener extends RunListener {
 
         if (parametersAnnotation != null)
             name = name.substring(name.indexOf('(') + 1, name.indexOf(')')) + " ("
-                    + description.getMethodName().substring(0, description.getMethodName().lastIndexOf('|') + 1) + ")";
+                    + description.getMethodName().substring(0, description.getMethodName().indexOf('(') - 1) + ")";
 
         return ScenarioManager.currentScenario()
                 .withName(name)

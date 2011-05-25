@@ -2,6 +2,8 @@ package tumbler.internal.parsers.gherkin;
 
 import static org.junit.Assert.*;
 import static tumbler.Tumbler.*;
+import static tumbler.TumblerRunner.*;
+import junitparams.*;
 
 import org.junit.*;
 import org.junit.rules.*;
@@ -74,12 +76,12 @@ public class ParameterisedScenariosScenarios {
     }
 
     public static class OneIntegerProvider {
-        public static String[] provideTwoNumbers() {
-            return new String[] { "|1|", "|2|" };
+        public static Object[] provideTwoNumbers() {
+            return $(1, 2);
         }
 
-        public static String[] provideOneNumber() {
-            return new String[] { "|3|" };
+        public static Object[] provideOneNumber() {
+            return $($(3));
         }
     }
 }
