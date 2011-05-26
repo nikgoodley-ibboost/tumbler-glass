@@ -29,6 +29,8 @@ import tumbler.internal.domain.*;
  * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#5a">&gt;=4.5</a><br/>
  * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#5b">4.4</a><br/>
  * <a href="#6">6. Annotating stories and scenarios</a><br/>
+ * <a href="#7">7. Parameterised scenarios</a><br/>
+ * <a href="#8">8. Integration with Spring</a><br/>
  * </b><br/>
  * <h3 id="1">1. Introduction</h3>
  * <p>
@@ -365,6 +367,59 @@ import tumbler.internal.domain.*;
  * <code>ScenariosToJavaConverter</code> since obviously all generated scenarios
  * need proper implementation first.
  * </p>
+ * 
+ * <h3 id="7">7. Parameterised scenarios</h3>
+ * <p>
+ * Scenarios can be parameterised. If you're using scenario text files, you can
+ * pass them in the following form:
+ * 
+ * <pre>
+ *  Scenario: lend an existing book from the library
+ *      Given the following book is in the library:
+ *          | title | author | quantity |
+ *          | Children from Bullerbyn | Astrid Lindgren | 10 |
+ *          | Fairy tales | Grimm brothers | 15 |
+ *      When a book is borrowed from the library
+ *      Then the library doesn't contain it anymore
+ * </pre>
+ * 
+ * If you're only using Java files, you can use more options for parameterising
+ * your scenarios. Since Tumbler is using JUnitParams library to handle
+ * parameterised scenarios, you can load parameters from a method declared in
+ * the Scenarios class, or public static method from external classes.
+ * 
+ * <pre>
+ *  &#064;Scenario
+ *  &#064;Parameters(source = BooksProvider.class)
+ *  public void shouldBorrowBookFromLibrary(String title, String author, int quantity) {
+ *      ...
+ *  }
+ * </pre>
+ * 
+ * Look at JUnitParams site for more examples.
+ * </p>
+ * <h3 id="8">8. Integration with Spring</h3>
+ * <p>
+ * You can easily use Tumbler together with Spring. The only problem is that
+ * Spring's test framework is based on JUnit runners, and JUnit allows only one
+ * runner to be run at once. Which would normally mean that you could use only
+ * one of Spring or Tumbler. Luckily we can cheat Spring a little by adding this
+ * to your test class:
+ * 
+ * <pre>
+ * private TestContextManager testContextManager;
+ * 
+ * &#064;Before
+ * public void init() throws Exception {
+ *     this.testContextManager = new TestContextManager(getClass());
+ *     this.testContextManager.prepareTestInstance(this);
+ * }
+ * </pre>
+ * 
+ * This lets you use in your tests anything that Spring provides in its test
+ * framework.
+ * </p>
+ * 
  * 
  * @author Pawel Lipinski (pawel.lipinski@pragmatists.pl)
  */
