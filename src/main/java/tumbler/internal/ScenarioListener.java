@@ -72,7 +72,7 @@ public class ScenarioListener extends RunListener {
 
     private void setAllFailedScenariosToStatusFailed(Result result) {
         for (Failure failure : result.getFailures()) {
-            story.scenarioDescribedBy(failure.getDescription()).withStatus(ScenarioStatus.FAILED);
+            story.scenarioDescribedBy(failure.getDescription()).withStatus(ScenarioStatus.FAILED.withDetails(failure.getException()));
         }
     }
 

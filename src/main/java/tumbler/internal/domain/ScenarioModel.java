@@ -7,7 +7,22 @@ import org.junit.runner.*;
 public class ScenarioModel {
 
     public enum ScenarioStatus {
-        PASSED, FAILED, PENDING
+        PASSED("Scenario passed"), FAILED(new Exception("")), PENDING("Not implemented yet");
+
+        private Object details;
+
+        ScenarioStatus(Object details) {
+            this.details = details;
+        }
+
+        public Object details() {
+            return details;
+        }
+
+        public ScenarioStatus withDetails(Object details) {
+            this.details = details;
+            return this;
+        }
     }
 
     private String name;
