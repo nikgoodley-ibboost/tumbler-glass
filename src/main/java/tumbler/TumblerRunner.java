@@ -54,30 +54,43 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
 
     @Override
     protected void runChild(FrameworkMethod method, RunNotifier notifier) {
-        if (parameterisedRunner.isParameterised(method)) {
-            if (method.getAnnotation(Ignore.class) != null) {
-                Description ignoredMethod = parameterisedRunner.describeParameterisedMethod(method);
+        if (handleIgnored(method, notifier))
+            return;
+
+        Statement methodBlock = methodBlock(method);
+
+        Description description = describeMethod(method);
+        if (isPending(method))
+            runScenario(true, description, notifier, methodBlock);
+        else {
+            if (!parameterisedRunner.runParameterisedTest(new TestMethod(method), methodBlock, notifier))
+                runScenario(false, description, notifier, methodBlock);
+        }
+    }
+
+    private boolean handleIgnored(FrameworkMethod method, RunNotifier notifier) {
+        TestMethod testMethod = new TestMethod(method);
+        boolean ignored = false;
+        if (method.getAnnotation(Ignore.class) != null) {
+            if (parameterisedRunner.isParameterised(testMethod)) {
+                Description ignoredMethod = parameterisedRunner.describeParameterisedMethod(testMethod);
                 for (Description child : ignoredMethod.getChildren()) {
                     notifier.fireTestIgnored(child);
+                    ignored = true;
                 }
-                return;
+            } else {
+                notifier.fireTestIgnored(describeMethod(method));
+                ignored = true;
             }
-            parameterisedRunner.runParameterisedTest(method, methodBlock(method), notifier);
-        } else
-            runScenario(isPending(method), method, notifier, methodBlock(method));
+        }
+        return ignored;
     }
 
     private boolean isPending(FrameworkMethod method) {
         return method.getAnnotation(Scenario.class).pending();
     }
 
-    private void runScenario(boolean pending, FrameworkMethod method, RunNotifier notifier, Statement methodInvoker) {
-        Description description = describeChild(method);
-        runMethodInvoker(pending, notifier, description, methodInvoker, description);
-    }
-
-    private void runMethodInvoker(boolean pending, RunNotifier notifier, Description description, Statement methodInvoker,
-            Description methodWithParams) {
+    private void runScenario(boolean pending, Description description, RunNotifier notifier, Statement methodInvoker) {
         EachTestNotifier eachNotifier = new EachTestNotifier(notifier, description);
         try {
             if (pending)
@@ -88,20 +101,22 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
             methodInvoker.evaluate();
         } catch (Throwable e) {
             if (!pending)
-                notifier.fireTestFailure(new Failure(methodWithParams, e));
+                notifier.fireTestFailure(new Failure(description, e));
         } finally {
             eachNotifier.fireTestFinished();
         }
-        if (pending)
+
+        if (pending) {
             eachNotifier.fireTestIgnored();
-    };
+        }
+    }
 
     @Override
     public Description getDescription() {
         Description description = Description.createSuiteDescription(getName(), getTestClass().getAnnotations());
 
         List<FrameworkMethod> resultMethods = new ArrayList<FrameworkMethod>();
-        resultMethods.addAll(parameterisedRunner.computeTestMethods(getTestClass().getAnnotatedMethods(Scenario.class), true));
+        resultMethods.addAll(parameterisedRunner.computeTestMethods(createTestMethodsList(), true));
 
         for (FrameworkMethod child : resultMethods) {
             Description describeMethod = describeMethod(child);
@@ -112,7 +127,17 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
     }
 
     private Description describeMethod(FrameworkMethod method) {
-        Description child = parameterisedRunner.describeParameterisedMethod(method);
+        Description child = null;
+
+        if (!isPending(method)) {
+            child = parameterisedRunner.describeParameterisedMethod(new TestMethod(method) {
+                @Override
+                public String name() {
+                    System.out.println(testName(frameworkMethod));
+                    return testName(frameworkMethod);
+                }
+            });
+        }
 
         if (child == null)
             child = describeChild(method);
@@ -142,13 +167,26 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
         ensureNothingAnnotatedWithTest(super.computeTestMethods());
         List<FrameworkMethod> resultMethods = new ArrayList<FrameworkMethod>();
 
-        resultMethods.addAll(parameterisedRunner.computeTestMethods(getTestClass().getAnnotatedMethods(Scenario.class), false));
+        resultMethods.addAll(parameterisedRunner.computeTestMethods(createTestMethodsList(), false));
 
-        for (FrameworkMethod child : resultMethods) {
-            Description describeMethod = describeMethod(child);
-        }
+        for (FrameworkMethod child : resultMethods)
+            describeMethod(child);
 
         return resultMethods;
+    }
+
+    private List<TestMethod> createTestMethodsList() {
+        List<TestMethod> methods = new ArrayList<TestMethod>();
+        List<FrameworkMethod> annotatedMethods = getTestClass().getAnnotatedMethods(Scenario.class);
+        for (FrameworkMethod frameworkMethod : annotatedMethods) {
+            methods.add(new TestMethod(frameworkMethod) {
+                @Override
+                public String name() {
+                    return testName(frameworkMethod);
+                }
+            });
+        }
+        return methods;
     }
 
     private void ensureNothingAnnotatedWithTest(List<FrameworkMethod> testMethods) {
@@ -200,7 +238,7 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
 
     @Override
     protected Statement methodInvoker(FrameworkMethod method, Object test) {
-        Statement methodInvoker = parameterisedRunner.parameterisedMethodInvoker(method, test);
+        Statement methodInvoker = parameterisedRunner.parameterisedMethodInvoker(new TestMethod(method), test);
         if (methodInvoker == null)
             methodInvoker = super.methodInvoker(method, test);
 

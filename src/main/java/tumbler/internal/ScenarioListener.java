@@ -125,7 +125,7 @@ public class ScenarioListener extends RunListener {
         else
             name = createScenarioNameFromTestMethodName(description, parametersAnnotation);
 
-        if (parametersAnnotation != null)
+        if (parametersAnnotation != null && !scenarioAnnotation.pending())
             name = name.substring(name.indexOf('(') + 1, name.indexOf(')')) + " ("
                     + description.getMethodName().substring(0, description.getMethodName().indexOf('(') - 1) + ")";
 

@@ -30,7 +30,7 @@ public class ParameterisedScenariosScenarios {
     }
 
     @Scenario
-    public void shouldReadPramsHeaderAndValue() {
+    public void shouldReadParamsHeaderAndValue() {
         Given("'Given' step ending with a colon and");
         String text = "Given the following:\n|header|\n|value|";
         scenarioState.setReader(new LineReader(text));
@@ -64,8 +64,18 @@ public class ParameterisedScenariosScenarios {
     }
 
     @Scenario(pending = true)
-    @Parameters({ "|1|" })
+    @Parameters({ "1" })
     public void shouldWorkForPending(int integer) {
+        assertEquals(1, integer);
+        assertEquals(2, integer);
+    }
+
+    @Scenario
+    @Parameters({ "1" })
+    public void shouldWorkWithGiWhTh(int integer) {
+        Given("integer " + integer);
+        When("compared to 1");
+        Then("then it succeeds");
         assertEquals(1, integer);
     }
 
