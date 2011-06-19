@@ -1,12 +1,8 @@
 package tumbler.internal.parsers.gherkin;
 
 import static tumbler.internal.parsers.gherkin.Keyword.*;
-
-import java.util.*;
-
 import tumbler.internal.domain.*;
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
 public class StoryState extends ParsingState {
 
     public StoryState() {
@@ -21,31 +17,27 @@ public class StoryState extends ParsingState {
 
     @Override
     protected void update(Object parent, Object child) {
-        if (parent instanceof List) {
-            List scenarios = (List) parent;
-            if (child instanceof ScenarioModel) {
-                ScenarioModel scenario = (ScenarioModel) child;
-                if (scenarios.contains(scenario))
-                    throw new IllegalStateException("Two elements with the same name: " + child.toString());
-                else
-                    scenarios.add(scenario);
-            }
-        } else {
-            StoryModel story = (StoryModel) parent;
-            if (child instanceof ScenarioModel) {
-                ScenarioModel scenario = (ScenarioModel) child;
-                scenario.withStory(story);
-                if (story != null) {
-                    if (story.scenarios().contains(scenario))
-                        throw new IllegalStateException("Two elements with the same name: " + child.toString());
-                    else
-                        story.scenarios().add(scenario);
-                }
-            } else if (child instanceof StepBasedModel) {
-                StepBasedModel step = (StepBasedModel) child;
-                if (story != null)
-                    story.withNarrativeStep(step);
-            }
+        StoryModel story = (StoryModel) parent;
+        if (child instanceof ScenarioModel)
+            addScenarioToStory(child, story);
+        else if (child instanceof StepBasedModel)
+            addNarrativeToStory(child, story);
+    }
+
+    private void addNarrativeToStory(Object child, StoryModel story) {
+        StepBasedModel step = (StepBasedModel) child;
+        if (story != null)
+            story.withNarrativeStep(step);
+    }
+
+    private void addScenarioToStory(Object child, StoryModel story) {
+        ScenarioModel scenario = (ScenarioModel) child;
+        scenario.withStory(story);
+        if (story != null) {
+            if (story.scenarios().contains(scenario))
+                throw new IllegalStateException("Two elements with the same name: " + child.toString());
+            else
+                story.scenarios().add(scenario);
         }
     }
 }

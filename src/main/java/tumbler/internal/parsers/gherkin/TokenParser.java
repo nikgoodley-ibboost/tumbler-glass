@@ -13,10 +13,10 @@ public abstract class TokenParser {
     public final void parse(String text) {
         verifyTextNotEmpty(text);
         
-        String storyLine = text.trim();
-        verifyTextStartsWithProperToken(storyLine);
+        String textLine = text.trim();
+        verifyTextStartsWithProperToken(textLine);
         
-        parsedLine = parseLine(storyLine);
+        parsedLine = parseLine(textLine);
     }
     
 	protected void verifyTextStartsWithProperToken(String storyLine) {

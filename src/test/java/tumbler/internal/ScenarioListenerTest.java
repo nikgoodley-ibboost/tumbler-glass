@@ -3,6 +3,7 @@ package tumbler.internal;
 import static org.junit.Assert.*;
 import static tumbler.Tumbler.*;
 import static tumbler.TumblerTestUtils.*;
+import static tumbler.internal.TumblerStringUtils.*;
 
 import java.io.*;
 import java.lang.annotation.*;
@@ -79,7 +80,7 @@ public class ScenarioListenerTest {
         listener.testFinished(Description.createTestDescription(StoryStatisticsScenarios.class, testName));
 
         Then("story should have the scenario");
-        assertEquals(TumblerUtils.decamelise(testName), listener.getStory().scenarios().get(0).name());
+        assertEquals(decamelise(testName), listener.getStory().scenarios().get(0).name());
         if (System.getProperty("generateReport") != null) {
             new File("StoryStatisticsScenariosScenarios.html").delete();
             listener.storiesList().remove(listener.getStory());

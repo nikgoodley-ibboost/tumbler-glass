@@ -1,6 +1,6 @@
 package tumbler;
 
-import static tumbler.internal.TumblerUtils.*;
+import static tumbler.internal.TumblerStringUtils.*;
 
 import java.lang.reflect.*;
 import java.util.*;

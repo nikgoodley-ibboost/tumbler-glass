@@ -1,6 +1,6 @@
 package tumbler;
 
-import tumbler.internal.*;
+import static tumbler.internal.ScenarioManager.*;
 import tumbler.internal.domain.*;
 
 /**
@@ -431,7 +431,7 @@ public class Tumbler {
      *            description of what is given
      */
     public static void Given(String description) {
-        ScenarioManager.currentScenario().withGiven(description);
+        currentScenario().withGiven(description);
     }
 
     /**
@@ -441,7 +441,7 @@ public class Tumbler {
      *            description of action being performed
      */
     public static void When(String description) {
-        ScenarioManager.currentScenario().withWhen(description);
+        currentScenario().withWhen(description);
     }
 
     /**
@@ -451,7 +451,7 @@ public class Tumbler {
      *            description of expected effect / state
      */
     public static void Then(String description) {
-        ScenarioManager.currentScenario().withThen(description);
+        currentScenario().withThen(description);
     }
 
     /**
@@ -461,7 +461,7 @@ public class Tumbler {
      *            the 'As a... I want... So that...' phrase
      */
     public static void Narrative(String narrative) {
-        if (ScenarioManager.currentScenario().story() != null)
-            ScenarioManager.currentScenario().story().withNarrative(narrative);
+        if (currentScenario().story() != null)
+            currentScenario().story().withNarrative(narrative);
     }
 }

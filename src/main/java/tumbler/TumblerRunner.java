@@ -1,6 +1,6 @@
 package tumbler;
 
-import static tumbler.internal.TumblerUtils.*;
+import static tumbler.internal.TumblerStringUtils.*;
 
 import java.util.*;
 
@@ -133,7 +133,6 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
             child = parameterisedRunner.describeParameterisedMethod(new TestMethod(method) {
                 @Override
                 public String name() {
-                    System.out.println(testName(frameworkMethod));
                     return testName(frameworkMethod);
                 }
             });

@@ -2,7 +2,7 @@ package tumbler.internal;
 
 import java.util.*;
 
-public class TumblerUtils {
+public class TumblerStringUtils {
 
 	public static String decamelise(String testName) {
 		String nocamel = charAtToUpper(0, testName);

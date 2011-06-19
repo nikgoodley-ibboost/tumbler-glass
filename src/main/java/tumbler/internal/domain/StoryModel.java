@@ -1,5 +1,7 @@
 package tumbler.internal.domain;
 
+import static tumbler.internal.TumblerStringUtils.*;
+
 import java.io.*;
 import java.util.*;
 
@@ -95,8 +97,8 @@ public class StoryModel implements WithText {
     }
 
     public String camelisedName() {
-        String result = TumblerUtils.removeSpecialCharacters(name);
-        return TumblerUtils.camelise(result);
+        String result = removeSpecialCharacters(name);
+        return camelise(result);
     }
 
     @Override

@@ -1,6 +1,6 @@
 package tumbler.internal;
 
-import static tumbler.internal.TumblerUtils.*;
+import static tumbler.internal.TumblerStringUtils.*;
 
 import java.util.*;
 
@@ -71,10 +71,8 @@ public class ScenarioListener extends RunListener {
     }
 
     private void setAllFailedScenariosToStatusFailed(Result result) {
-        for (Failure failure : result.getFailures()) {
-            failure.getException().printStackTrace();
+        for (Failure failure : result.getFailures())
             story.scenarioDescribedBy(failure.getDescription()).withStatus(ScenarioStatus.FAILED.withDetails(failure.getException()));
-        }
     }
 
     private void setStatusToPendingIfAnnotatedAsPending(ScenarioModel scenario) {
@@ -159,7 +157,7 @@ public class ScenarioListener extends RunListener {
             className = removeSuffixFromClassName(className, "Scenarios");
             className = removePackage(className);
         }
-        story = new StoryModel(TumblerUtils.decamelise(className));
+        story = new StoryModel(TumblerStringUtils.decamelise(className));
     }
 
     private String removePackage(String className) {

@@ -1,5 +1,7 @@
 package tumbler.internal.writers;
 
+import static tumbler.internal.TumblerStringUtils.*;
+
 import java.util.*;
 
 import tumbler.internal.*;
@@ -38,13 +40,13 @@ public class JavaGenerator {
 
     private String generateMethodFor(ScenarioModel scenario) {
         String name = scenario.name();
-        name = TumblerUtils.removeSpecialCharacters(name);
+        name = removeSpecialCharacters(name);
         StringBuilder start = new StringBuilder("\n\t@Scenario(");
         if (!name.equals(scenario.name()))
             start.append("value = \"" + scenario.name() + "\", ");
         start.append("pending = true)");
         generateParametersAnnotation(scenario.givenStep(), start);
-        start.append("\n\tpublic void should" + TumblerUtils.camelise(name) + "(");
+        start.append("\n\tpublic void should" + camelise(name) + "(");
         generateMethodParameters(scenario.givenStep(), start);
         start.append(") {\n");
         start.append(
