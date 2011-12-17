@@ -63,13 +63,16 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
         if (isPending(method))
             runScenario(true, description, notifier, methodBlock);
         else {
-            if (!parameterisedRunner.runParameterisedTest(new TestMethod(method), methodBlock, notifier))
+            TestMethod testMethod = new TestMethod(method, getTestClass());
+            if (parameterisedRunner.isParameterised(testMethod))
+                parameterisedRunner.runParameterisedTest(testMethod, methodBlock, notifier);
+            else
                 runScenario(false, description, notifier, methodBlock);
         }
     }
 
     private boolean handleIgnored(FrameworkMethod method, RunNotifier notifier) {
-        TestMethod testMethod = new TestMethod(method);
+        TestMethod testMethod = new TestMethod(method, getTestClass());
         boolean ignored = false;
         if (method.getAnnotation(Ignore.class) != null) {
             if (parameterisedRunner.isParameterised(testMethod)) {
@@ -130,7 +133,7 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
         Description child = null;
 
         if (!isPending(method)) {
-            child = parameterisedRunner.describeParameterisedMethod(new TestMethod(method) {
+            child = parameterisedRunner.describeParameterisedMethod(new TestMethod(method, getTestClass()) {
                 @Override
                 public String name() {
                     return testName(frameworkMethod);
@@ -178,7 +181,7 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
         List<TestMethod> methods = new ArrayList<TestMethod>();
         List<FrameworkMethod> annotatedMethods = getTestClass().getAnnotatedMethods(Scenario.class);
         for (FrameworkMethod frameworkMethod : annotatedMethods) {
-            methods.add(new TestMethod(frameworkMethod) {
+            methods.add(new TestMethod(frameworkMethod, getTestClass()) {
                 @Override
                 public String name() {
                     return testName(frameworkMethod);
@@ -237,7 +240,7 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
 
     @Override
     protected Statement methodInvoker(FrameworkMethod method, Object test) {
-        Statement methodInvoker = parameterisedRunner.parameterisedMethodInvoker(new TestMethod(method), test);
+        Statement methodInvoker = parameterisedRunner.parameterisedMethodInvoker(new TestMethod(method, getTestClass()), test);
         if (methodInvoker == null)
             methodInvoker = super.methodInvoker(method, test);
 
