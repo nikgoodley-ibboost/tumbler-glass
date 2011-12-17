@@ -4,8 +4,6 @@ import org.springframework.context.*;
 import org.springframework.context.annotation.*;
 import org.springframework.test.context.*;
 
-import tumbler.spring.MyTest.*;
-
 public class TestContextLoader implements ContextLoader {
     public String[] processLocations(Class<?> clazz, String... locations) {
         return new String[] {};

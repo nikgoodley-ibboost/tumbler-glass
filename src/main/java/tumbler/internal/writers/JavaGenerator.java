@@ -4,7 +4,6 @@ import static tumbler.internal.TumblerStringUtils.*;
 
 import java.util.*;
 
-import tumbler.internal.*;
 import tumbler.internal.domain.*;
 
 public class JavaGenerator {

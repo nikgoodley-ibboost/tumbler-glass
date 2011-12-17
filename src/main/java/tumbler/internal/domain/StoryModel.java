@@ -7,7 +7,6 @@ import java.util.*;
 
 import org.junit.runner.*;
 
-import tumbler.internal.*;
 import tumbler.internal.domain.ScenarioModel.ScenarioStatus;
 import tumbler.internal.parsers.*;
 
@@ -52,7 +51,7 @@ public class StoryModel implements WithText {
 
     public void addScenario(ScenarioModel scenario) {
         if (scenarios.contains(scenario))
-            throw new ParseException("Two scenarios with the same name: " + scenario.name());        
+            throw new ParseException("Two scenarios with the same name: " + scenario.name());
 
         scenarios.add(scenario);
     }
@@ -91,7 +90,7 @@ public class StoryModel implements WithText {
         if (firstLine == null
                 || firstLine.trim().isEmpty()
                 || !(
-                    firstLine.trim().startsWith("Story:") || firstLine.trim().startsWith("Feature:")
+                firstLine.trim().startsWith("Story:") || firstLine.trim().startsWith("Feature:")
                 ))
             throw new IllegalArgumentException("Scenarios have no story");
     }
@@ -154,11 +153,11 @@ public class StoryModel implements WithText {
     }
 
     public void withNarrative(String narrative) {
-        String firstStep = findStepMatchingStartOf(narrative);                               
-        int nextStepIndex = findNextStepIndex(narrative, firstStep);            
+        String firstStep = findStepMatchingStartOf(narrative);
+        int nextStepIndex = findNextStepIndex(narrative, firstStep);
 
         setNarrativeStep(narrative, firstStep, firstStep.length(), nextStepIndex);
-        
+
         if (nextStepIndex > -1)
             withNarrative(narrative.substring(nextStepIndex));
     }
@@ -169,7 +168,7 @@ public class StoryModel implements WithText {
                 return phrase;
             }
         }
-        
+
         throwNarrativeFormatException();
         return null;
     }
@@ -187,8 +186,8 @@ public class StoryModel implements WithText {
 
     private void setNarrativeStep(String narrative, String currentStep, int start, int end) {
         withNarrativeStep(new StepBasedModel()
-                        .withText(stepText(narrative, start, end))
-                        .withToken(currentStep));       
+                .withText(stepText(narrative, start, end))
+                .withToken(currentStep));
     }
 
     private String stepText(String narrative, int start, int end) {
@@ -197,10 +196,10 @@ public class StoryModel implements WithText {
             stepText = narrative.substring(start, end).trim();
         else
             stepText = narrative.substring(start).trim();
-        
+
         if (stepText.endsWith(".") || stepText.endsWith(","))
             stepText = stepText.substring(0, stepText.length() - 1);
-        
+
         return stepText;
     }
 
@@ -255,7 +254,7 @@ public class StoryModel implements WithText {
         return narrative;
     }
 
-    public boolean hasNarrative() {        
-        return ! "".equals(narrative());
+    public boolean hasNarrative() {
+        return !"".equals(narrative());
     }
 }
