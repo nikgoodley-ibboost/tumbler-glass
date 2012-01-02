@@ -6,7 +6,6 @@ import static tumbler.TumblerRunner.*;
 import junitparams.*;
 
 import org.junit.*;
-import org.junit.rules.*;
 import org.junit.runner.*;
 
 import tumbler.*;
@@ -14,9 +13,6 @@ import tumbler.internal.domain.*;
 
 @RunWith(TumblerRunner.class)
 public class ParameterisedScenariosScenarios {
-
-    @Rule
-    public ExpectedException justToTestRulesWithParameterisedScenarios = ExpectedException.none();
 
     private ScenarioState scenarioState;
 
@@ -47,8 +43,10 @@ public class ParameterisedScenariosScenarios {
     }
 
     @Scenario
-    @Parameters({ "|val1|1|2|3|1.1|2.2|true|a|0|",
-            "|val1|1|2|3|2.1|2.2|true|a|0|", "|val1|1|2|3|1.2|2.2|true|a|0|" })
+    @Parameters({
+            "|val1|1|2|3|1.1|2.2|true|a|0|",
+            "|val1|1|2|3|2.1|2.2|true|a|0|",
+            "|val1|1|2|3|1.2|2.2|true|a|0|" })
     public void shouldHandleAllPrimitiveTypes(String string, int integer,
             short schort, long loong, float real1, double real2,
             boolean bool, char character, byte bite) {
