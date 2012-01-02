@@ -11,8 +11,9 @@ public class JavaGenerator {
     public static final String IMPORTS =
             "import org.junit.*;\n" +
                     "import org.junit.runner.*;\n" +
-                    "import tumbler.*;\n" +
                     "import static org.junit.Assert.*;\n" +
+                    "import junitparams.*;\n" +
+                    "import tumbler.*;\n" +
                     "import static tumbler.Tumbler.*;";
 
     private String javaText;

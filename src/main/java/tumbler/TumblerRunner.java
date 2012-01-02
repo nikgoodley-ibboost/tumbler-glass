@@ -132,14 +132,12 @@ public class TumblerRunner extends BlockJUnit4ClassRunner {
     private Description describeMethod(FrameworkMethod method) {
         Description child = null;
 
-        if (!isPending(method)) {
-            child = parameterisedRunner.describeParameterisedMethod(new TestMethod(method, getTestClass()) {
-                @Override
-                public String name() {
-                    return testName(frameworkMethod);
-                }
-            });
-        }
+        child = parameterisedRunner.describeParameterisedMethod(new TestMethod(method, getTestClass()) {
+            @Override
+            public String name() {
+                return testName(frameworkMethod);
+            }
+        });
 
         if (child == null)
             child = describeChild(method);

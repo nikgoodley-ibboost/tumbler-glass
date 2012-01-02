@@ -62,10 +62,9 @@ public class ParameterisedScenariosScenarios {
     }
 
     @Scenario(pending = true)
-    @Parameters({ "1" })
+    @Parameters({ "1", "1" })
     public void shouldWorkForPending(int integer) {
         assertEquals(1, integer);
-        assertEquals(2, integer);
     }
 
     @Scenario
